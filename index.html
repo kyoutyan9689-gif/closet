@@ -28,11 +28,30 @@
         </div>
       </header>
 
+      <section class="category-panel" aria-labelledby="category-title">
+        <div class="section-heading">
+          <h2 id="category-title">カテゴリ</h2>
+          <span>絞り込み</span>
+        </div>
+        <div id="category-filters" class="chip-list filter-list" aria-label="カテゴリで絞り込む"></div>
+        <form id="category-form" class="category-form">
+          <label class="sr-only" for="category-name">新しいカテゴリ名</label>
+          <input id="category-name" type="text" maxlength="20" placeholder="例：夏、仕事用" autocomplete="off" required />
+          <button type="submit">作成</button>
+        </form>
+        <div id="category-management" class="category-management" aria-label="カテゴリの管理"></div>
+      </section>
+
       <section class="add-panel" aria-labelledby="add-title">
         <h2 id="add-title">新しい品目</h2>
         <form id="item-form">
           <label for="item-name">品目名</label>
           <input id="item-name" name="name" type="text" placeholder="例：Tシャツ" maxlength="40" autocomplete="off" required />
+
+          <fieldset class="category-fieldset">
+            <legend>カテゴリ（複数選択可）</legend>
+            <div id="add-category-options" class="chip-list selection-list"></div>
+          </fieldset>
 
           <div class="form-row">
             <div class="quantity-field">
@@ -53,7 +72,7 @@
         <div id="empty-state" class="empty-state">
           <div class="empty-icon" aria-hidden="true">＋</div>
           <p>まだ品目がありません</p>
-          <span>上のフォームから追加してください</span>
+          <span id="empty-message">上のフォームから追加してください</span>
         </div>
       </section>
     </main>
@@ -61,8 +80,14 @@
     <template id="item-template">
       <li class="item-card">
         <div class="item-info">
-          <h3 class="item-name"></h3>
-          <button class="delete-button" type="button" aria-label="削除">
+          <div class="item-details">
+            <h3 class="item-name"></h3>
+            <div class="item-categories chip-list"></div>
+          </div>
+          <button class="icon-button edit-button" type="button" aria-label="編集">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10.5-10.5a2.1 2.1 0 0 0-3-3L5.2 16 4 20Zm10-13 3 3" /></svg>
+          </button>
+          <button class="icon-button delete-button" type="button" aria-label="削除">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v5m4-5v5" /></svg>
           </button>
         </div>
@@ -73,6 +98,22 @@
         </div>
       </li>
     </template>
+
+    <dialog id="edit-dialog" class="edit-dialog">
+      <form id="edit-form" method="dialog">
+        <div class="dialog-heading">
+          <h2>アイテムを編集</h2>
+          <button id="edit-close" class="close-button" type="button" aria-label="閉じる">×</button>
+        </div>
+        <label for="edit-name">品目名</label>
+        <input id="edit-name" type="text" maxlength="40" required />
+        <fieldset class="category-fieldset">
+          <legend>カテゴリ（複数選択可）</legend>
+          <div id="edit-category-options" class="chip-list selection-list"></div>
+        </fieldset>
+        <button class="save-button" type="submit">変更を保存</button>
+      </form>
+    </dialog>
 
     <script src="./app.js" defer></script>
   </body>
