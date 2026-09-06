@@ -19,11 +19,19 @@ const editDialog = document.querySelector("#edit-dialog");
 const editForm = document.querySelector("#edit-form");
 const editNameInput = document.querySelector("#edit-name");
 const editCategoryOptions = document.querySelector("#edit-category-options");
+const copyBackupButton = document.querySelector("#copy-backup");
+const loadBackupButton = document.querySelector("#load-backup");
+const backupInput = document.querySelector("#backup-input");
+const backupStatus = document.querySelector("#backup-status");
+const restoreDialog = document.querySelector("#restore-dialog");
+const restoreItemCount = document.querySelector("#restore-item-count");
+const restoreCategoryCount = document.querySelector("#restore-category-count");
 
 let categories = loadCategories();
 let items = loadItems();
 let activeCategoryId = null;
 let editingItemId = null;
+let pendingBackup = null;
 
 function loadCategories() {
   try {
@@ -62,6 +70,102 @@ function saveItems() {
 
 function saveCategories() {
   localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(categories));
+}
+
+function createBackupJson() {
+  return JSON.stringify({
+    format: "closet-backup",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    items,
+    categories
+  }, null, 2);
+}
+
+function showBackupStatus(message, isError = false) {
+  backupStatus.textContent = message;
+  backupStatus.classList.toggle("is-error", isError);
+}
+
+async function copyText(textToCopy) {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      return;
+    } catch {
+      // Fall through to the selection-based method used by older Safari versions.
+    }
+  }
+
+  // Older iOS/Safari versions need a selected, editable element for execCommand.
+  const temporaryInput = document.createElement("textarea");
+  temporaryInput.value = textToCopy;
+  temporaryInput.setAttribute("readonly", "");
+  temporaryInput.style.position = "fixed";
+  temporaryInput.style.inset = "0";
+  temporaryInput.style.opacity = "0";
+  document.body.append(temporaryInput);
+  temporaryInput.select();
+  temporaryInput.setSelectionRange(0, temporaryInput.value.length);
+  const copied = document.execCommand("copy");
+  temporaryInput.remove();
+  if (!copied) throw new Error("copy failed");
+}
+
+function parseBackup(input) {
+  let backup;
+  try {
+    backup = JSON.parse(input);
+  } catch {
+    throw new Error("JSONの形式が正しくありません。コピーした内容を確認してください。");
+  }
+
+  if (!backup || backup.format !== "closet-backup" || backup.version !== 1
+      || !Array.isArray(backup.items) || !Array.isArray(backup.categories)) {
+    throw new Error("このアプリのバックアップとして認識できません。");
+  }
+
+  const validCategories = backup.categories.every((category) =>
+    category && typeof category.id === "string" && typeof category.name === "string" && category.name.trim()
+  );
+  const validItems = backup.items.every((item) =>
+    item && typeof item.id === "string" && typeof item.name === "string" && item.name.trim()
+      && Number.isSafeInteger(item.quantity) && item.quantity >= 0
+      && Array.isArray(item.categoryIds) && item.categoryIds.every((id) => typeof id === "string")
+  );
+  if (!validCategories || !validItems) {
+    throw new Error("バックアップのデータが壊れているため読み込めません。");
+  }
+
+  return {
+    categories: backup.categories.map(({ id, name }) => ({ id, name })),
+    items: backup.items.map(({ id, name, quantity, categoryIds }) => ({
+      id,
+      name,
+      quantity,
+      categoryIds: [...new Set(categoryIds)]
+    }))
+  };
+}
+
+function restoreBackup(backup) {
+  const previousItems = localStorage.getItem(STORAGE_KEY);
+  const previousCategories = localStorage.getItem(CATEGORY_STORAGE_KEY);
+  try {
+    localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(backup.categories));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(backup.items));
+  } catch (error) {
+    if (previousCategories === null) localStorage.removeItem(CATEGORY_STORAGE_KEY);
+    else localStorage.setItem(CATEGORY_STORAGE_KEY, previousCategories);
+    if (previousItems === null) localStorage.removeItem(STORAGE_KEY);
+    else localStorage.setItem(STORAGE_KEY, previousItems);
+    throw error;
+  }
+
+  categories = backup.categories;
+  items = backup.items;
+  activeCategoryId = null;
+  render();
 }
 
 function createChip(category, { selected = false, selectable = false } = {}) {
@@ -294,6 +398,57 @@ form.addEventListener("submit", (event) => {
   quantityInput.value = "1";
   render();
   nameInput.focus();
+});
+
+copyBackupButton.addEventListener("click", async () => {
+  try {
+    await copyText(createBackupJson());
+    showBackupStatus("バックアップをコピーしました。移行先の入力欄に貼り付けてください。");
+  } catch {
+    showBackupStatus("コピーできませんでした。Safariの設定を確認して、もう一度お試しください。", true);
+  }
+});
+
+backupInput.addEventListener("input", () => showBackupStatus(""));
+
+loadBackupButton.addEventListener("click", () => {
+  try {
+    pendingBackup = parseBackup(backupInput.value.trim());
+  } catch (error) {
+    pendingBackup = null;
+    showBackupStatus(error.message, true);
+    backupInput.focus();
+    return;
+  }
+
+  restoreItemCount.textContent = `${pendingBackup.items.length}種類`;
+  restoreCategoryCount.textContent = `${pendingBackup.categories.length}件`;
+  restoreDialog.showModal();
+});
+
+function closeRestoreDialog() {
+  pendingBackup = null;
+  restoreDialog.close();
+}
+
+document.querySelector("#restore-close").addEventListener("click", closeRestoreDialog);
+document.querySelector("#restore-cancel").addEventListener("click", closeRestoreDialog);
+restoreDialog.addEventListener("click", (event) => {
+  if (event.target === restoreDialog) closeRestoreDialog();
+});
+document.querySelector("#restore-confirm").addEventListener("click", () => {
+  if (!pendingBackup) return;
+  try {
+    restoreBackup(pendingBackup);
+    pendingBackup = null;
+    restoreDialog.close();
+    backupInput.value = "";
+    showBackupStatus("バックアップを復元しました。");
+  } catch {
+    showBackupStatus("保存領域に書き込めませんでした。現在のデータは変更されていません。", true);
+    restoreDialog.close();
+    pendingBackup = null;
+  }
 });
 
 if ("serviceWorker" in navigator) {
