@@ -75,6 +75,20 @@
           <span id="empty-message">上のフォームから追加してください</span>
         </div>
       </section>
+
+      <section class="backup-panel" aria-labelledby="backup-title">
+        <div class="section-heading">
+          <h2 id="backup-title">バックアップと復元</h2>
+          <span>機種変更にも</span>
+        </div>
+        <p class="backup-description">アイテム・個数・カテゴリをJSONでコピーし、別のブラウザやホーム画面版へ移せます。</p>
+        <button id="copy-backup" class="backup-button" type="button">バックアップをコピー</button>
+        <div class="backup-divider" aria-hidden="true"><span>復元</span></div>
+        <label for="backup-input">コピーしたJSONを貼り付け</label>
+        <textarea id="backup-input" rows="6" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="ここにバックアップを貼り付けてください"></textarea>
+        <button id="load-backup" class="restore-button" type="button">バックアップを読み込む</button>
+        <p id="backup-status" class="backup-status" role="status" aria-live="polite"></p>
+      </section>
     </main>
 
     <template id="item-template">
@@ -114,6 +128,24 @@
         </fieldset>
         <button class="save-button" type="submit">変更を保存</button>
       </form>
+    </dialog>
+
+    <dialog id="restore-dialog" class="edit-dialog restore-dialog">
+      <div class="restore-dialog-content">
+        <div class="dialog-heading">
+          <h2>バックアップを復元しますか？</h2>
+          <button id="restore-close" class="close-button" type="button" aria-label="閉じる">×</button>
+        </div>
+        <p>現在のデータは、貼り付けたバックアップの内容に置き換わります。この操作は元に戻せません。</p>
+        <dl class="restore-summary">
+          <div><dt>アイテム</dt><dd id="restore-item-count">0種類</dd></div>
+          <div><dt>カテゴリ</dt><dd id="restore-category-count">0件</dd></div>
+        </dl>
+        <div class="dialog-actions">
+          <button id="restore-cancel" class="cancel-button" type="button">キャンセル</button>
+          <button id="restore-confirm" class="danger-button" type="button">復元する</button>
+        </div>
+      </div>
     </dialog>
 
     <script src="./app.js" defer></script>
