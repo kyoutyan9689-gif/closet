@@ -1,0 +1,19 @@
+{
+  "name": "クローゼット管理",
+  "short_name": "クローゼット",
+  "description": "クローゼットの品目と個数をシンプルに管理します。",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f4f2",
+  "theme_color": "#f4f4f2",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
