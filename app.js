@@ -101,6 +101,8 @@ function selectedCategoryIds(container) {
 }
 
 function renderCategories() {
+  // Creating a category should not discard choices already made in the add form.
+  const selectedAddCategoryIds = selectedCategoryIds(addCategoryOptions);
   categoryFilters.replaceChildren();
   const allButton = document.createElement("button");
   allButton.type = "button";
@@ -130,7 +132,7 @@ function renderCategories() {
     categoryManagement.append(row);
   });
 
-  renderCategoryPicker(addCategoryOptions);
+  renderCategoryPicker(addCategoryOptions, selectedAddCategoryIds);
 }
 
 function setActiveCategory(id) {
@@ -250,6 +252,9 @@ document.querySelector("#edit-close").addEventListener("click", () => editDialog
 editDialog.addEventListener("click", (event) => {
   if (event.target === editDialog) editDialog.close();
 });
+editDialog.addEventListener("close", () => {
+  editingItemId = null;
+});
 
 editForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -261,7 +266,6 @@ editForm.addEventListener("submit", (event) => {
   );
   saveItems();
   editDialog.close();
-  editingItemId = null;
   renderItems();
 });
 
