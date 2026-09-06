@@ -287,7 +287,7 @@ function renderItems() {
     ? `${items.length}種類`
     : `${visibleItems.length}種類 / 全${items.length}種類`;
   emptyState.hidden = visibleItems.length > 0;
-  emptyMessage.textContent = items.length ? "別のカテゴリを選んでください" : "上のフォームから追加してください";
+  emptyMessage.textContent = items.length ? "別のカテゴリを選択してください" : "";
 }
 
 function render() {
