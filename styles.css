@@ -18,6 +18,7 @@ body {
 
 button, input { font: inherit; }
 button { touch-action: manipulation; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 .app-shell {
   width: min(100%, 560px);
@@ -48,7 +49,7 @@ h1 { margin: 0; font-size: clamp(30px, 9vw, 42px); line-height: 1.05; letter-spa
 .total strong { font-size: 32px; line-height: 1; letter-spacing: -.04em; }
 .total small { color: #777; font-size: 12px; }
 
-.add-panel {
+.add-panel, .category-panel {
   padding: 20px;
   border: 1px solid #e2e2de;
   border-radius: 20px;
@@ -56,8 +57,45 @@ h1 { margin: 0; font-size: clamp(30px, 9vw, 42px); line-height: 1.05; letter-spa
   box-shadow: 0 8px 30px rgba(0, 0, 0, .04);
 }
 
+.category-panel { margin-bottom: 14px; }
+.category-panel .section-heading { margin: 0 0 12px; }
+.chip-list { display: flex; flex-wrap: wrap; gap: 7px; min-width: 0; }
+.filter-list { flex-wrap: nowrap; margin-inline: -4px; padding: 4px; overflow-x: auto; scrollbar-width: none; }
+.filter-list::-webkit-scrollbar { display: none; }
+.chip {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 5px 11px;
+  border: 1px solid #d9d9d4;
+  border-radius: 999px;
+  background: #f7f7f5;
+  color: #555;
+  font-size: 12px;
+  font-weight: 600;
+}
+button.chip { cursor: pointer; }
+.chip.is-selected { border-color: #111; background: #111; color: #fff; }
+.category-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-top: 14px; }
+.category-form input { min-height: 44px; }
+.category-form > button {
+  min-width: 64px;
+  border: 0;
+  border-radius: 11px;
+  background: #e9e9e5;
+  color: #222;
+  font-weight: 700;
+}
+.category-management { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.category-management:empty { display: none; }
+.manage-chip { display: inline-flex; align-items: center; border: 1px solid #e2e2de; border-radius: 999px; background: #fafaf8; }
+.manage-chip .chip { min-height: 28px; padding-right: 4px; border: 0; background: transparent; }
+.manage-chip button:last-child { width: 32px; height: 32px; padding: 0; border: 0; background: transparent; color: #888; font-size: 18px; cursor: pointer; }
+
 .add-panel h2, .section-heading h2 { margin: 0; font-size: 15px; letter-spacing: .02em; }
 label { display: block; margin: 18px 0 8px; color: #6b6b68; font-size: 12px; font-weight: 600; }
+.category-fieldset { min-width: 0; margin: 18px 0 2px; padding: 0; border: 0; }
+.category-fieldset legend { margin-bottom: 8px; color: #6b6b68; font-size: 12px; font-weight: 600; }
+.category-hint { color: #999; font-size: 12px; }
 
 input {
   width: 100%;
@@ -106,10 +144,14 @@ input::placeholder { color: #aaa; }
 }
 
 @keyframes appear { from { opacity: 0; transform: translateY(-5px); } }
-.item-info { min-width: 0; display: flex; align-items: center; gap: 8px; }
+.item-info { min-width: 0; display: flex; align-items: center; gap: 2px; }
+.item-details { min-width: 0; flex: 1; }
 .item-name { overflow: hidden; margin: 0; font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
+.item-categories { gap: 4px; margin-top: 6px; }
+.item-categories:empty { display: none; }
+.item-categories .chip { min-height: 22px; padding: 2px 8px; font-size: 10px; }
 
-.delete-button {
+.icon-button {
   display: grid;
   flex: 0 0 44px;
   width: 44px;
@@ -120,8 +162,9 @@ input::placeholder { color: #aaa; }
   color: #aaa;
   cursor: pointer;
 }
-.delete-button svg { width: 19px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
-.delete-button:active { color: #111; }
+.icon-button svg { width: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+.icon-button:active { color: #111; }
+.edit-button { color: #666; }
 .stepper { display: grid; grid-template-columns: 46px 45px 46px; align-items: center; }
 
 .step-button {
@@ -145,9 +188,27 @@ input::placeholder { color: #aaa; }
 .empty-state p { margin: 0 0 5px; color: #444; font-size: 15px; font-weight: 600; }
 .empty-state span { font-size: 12px; }
 
+.edit-dialog {
+  width: min(calc(100% - 28px), 500px);
+  max-height: calc(100dvh - 28px);
+  padding: 0;
+  overflow: auto;
+  border: 0;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, .25);
+}
+.edit-dialog::backdrop { background: rgba(0, 0, 0, .42); }
+.edit-dialog form { padding: 20px; }
+.dialog-heading { display: flex; align-items: center; justify-content: space-between; }
+.dialog-heading h2 { margin: 0; font-size: 18px; }
+.close-button { width: 44px; height: 44px; border: 0; background: transparent; color: #777; font-size: 28px; cursor: pointer; }
+.save-button { width: 100%; min-height: 52px; margin-top: 24px; border: 0; border-radius: 12px; background: #111; color: #fff; font-weight: 700; cursor: pointer; }
+
 @media (max-width: 380px) {
   .app-shell { padding-inline: 14px; }
-  .item-card { padding-left: 14px; }
+  .item-card { grid-template-columns: 1fr; gap: 8px; padding-left: 14px; }
+  .stepper { justify-self: end; }
   .stepper { grid-template-columns: 42px 38px 42px; }
   .step-button { width: 42px; height: 42px; }
 }
